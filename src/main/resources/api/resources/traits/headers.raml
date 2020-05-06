@@ -1,0 +1,18 @@
+#%RAML 1.0 Trait
+headers:
+  access_token:
+    description: |
+      Access token.
+    required: false
+  applicationId:
+    description: |
+      The ID of the application within the corporate entity from which this message originated.
+    required: false
+    example: test
+    maxLength: 32
+  messageDateTimeStamp:
+    description: |
+      The dateTimeStamp of when the message was created.
+    required: false
+    example: |
+      2020-05-05T18:30:00

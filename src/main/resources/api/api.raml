@@ -1,0 +1,75 @@
+#%RAML 1.0
+title: MuleSoft Developer Code Challenge
+version: v1
+
+traits:
+  headers: !include resources/traits/headers.raml
+
+resourceTypes:
+  customersCollection: !include resourceTypes/errorCollection.raml
+  
+uses:
+  ErrorResponse: resources/libraries/errors.raml
+  PostEmployeeDetailsRequest: resources/libraries/createEmployeeRequest.raml
+
+/employee:
+  post:
+    is: [headers]    
+    description: |
+      This API will insert employee details in HRMS system
+      body:
+        application/json:
+          type:  PostEmployeeDetailsRequest.POSTEmployeeDetailsRequest
+          example: !include examples/createEmployeeDetailsRequest.json
+      responses:
+        201:
+          body:
+            application/json:
+              type: string
+
+/{number}:
+  get:
+    is: [headers]    
+    description: |
+      This API will accept a number and produce a JSON array
+    responses:
+      200:
+        body:
+            application/json:
+              type: array
+              example: !include examples/naturalNumberResponse.json
+
+/converttocamelcase:
+  put:
+    is: [headers]    
+    description: |
+      This API will accept a string and convert it to camelcase
+    queryParameters: 
+      requestString:
+        description: String that needs to be converted to camelcase
+        type: string
+        required: false
+    responses:
+      200:
+        body:
+            application/json:
+              type: string
+              
+/aggregate:
+  post:
+    is: [headers]    
+    description: |
+      This API will two JSONs and combine them
+    queryParameters: 
+      includeAll:
+        description: Include all the objects in array
+        type: string
+        required: true
+    responses:
+      200:
+        body:
+            application/json:
+              type: object
+
+
+    

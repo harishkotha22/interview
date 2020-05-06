@@ -1,0 +1,19 @@
+#%RAML 1.0 Library
+types:
+  POSTEmployeeDetailsRequest:
+    displayName: POSTEmployeeDetailsRequest
+    type: object
+    properties:
+      employee:
+       type: object
+       required: true
+       properties:
+        id:
+          type: string
+          required: true
+        first_name:
+          type: string
+          required: true
+        last_name:
+          type: string
+          required: true

@@ -1,0 +1,320 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+    <http:listener-config name="api-httpListenerConfig">
+        <http:listener-connection host="0.0.0.0" port="8081" />
+    </http:listener-config>
+    <apikit:config name="api-config" api="api.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+    <flow name="api-main">
+        <http:listener config-ref="api-httpListenerConfig" path="/api/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:router config-ref="api-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:BAD_REQUEST">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Bad request"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">400</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:METHOD_NOT_ALLOWED">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Method not allowed"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">405</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_ACCEPTABLE">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Not acceptable"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">406</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:UNSUPPORTED_MEDIA_TYPE">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Unsupported media type"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">415</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_IMPLEMENTED">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Not Implemented"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">501</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="api-console">
+        <http:listener config-ref="api-httpListenerConfig" path="/console/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:console config-ref="api-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="post:\employee:api-config">
+        <logger level="INFO" message="post:\employee:api-config" />
+		<ee:transform doc:name="Prepare Output Payload" doc:id="839a8c8c-e3ae-4053-946e-1bc1ea36c9ab" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload.employee.first_name ++ " " ++ payload.employee.last_name ++ " " ++ "employee profile is created in HRMS System."]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="Invoke Employee2 flow" doc:id="e485aece-31cd-4d19-a1a3-d807a8f6ced2" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+Mule::lookup('employee2', payload)]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+    </flow>
+    
+    <flow name="employee2" >
+	  <logger level="INFO" doc:name="Logger" message="Employee2 flow" />
+	  <set-payload value='#[payload]' doc:name="Set Output Payload" />
+	</flow>
+	
+	<flow name="put:\converttocamelcase:api-config">
+		<set-variable value="#[attributes.queryParams.requestString]" doc:name="Set Request Variable" doc:id="7292f9ae-d20d-40d3-a972-c5f12d1bb813" variableName="requestString"/>
+		<ee:transform doc:name="Set Output Response" doc:id="bdc10b13-5a45-4889-b9ef-03cf5bb31b7e" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+import java!mulesoftdevelopercodechallenge::ConverttoCamelCase
+output application/json
+---
+ConverttoCamelCase::convert(vars.requestString)
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	
+    <flow name="get:\(number):api-config">
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" doc:id="82527f2c-3947-4077-8753-ec3895789910" doc:name="Set Input Params">
+            <ee:variables>
+                <ee:set-variable variableName="number"><![CDATA[attributes.uriParams.'number']]></ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd" doc:id="a3544366-d874-4326-a67d-0540cad8bebc" doc:name="Output Transform Message">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+1 to vars.number]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+	
+	<flow name="post:\aggregate:api-config" doc:id="a5cebe67-14a2-4bd6-bfc5-39d59f5ac0c2" >
+		<ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" doc:id="2649a787-c7da-4dc6-84e2-78a59a215f17" doc:name="Set Input Params">
+            <ee:variables>
+                <ee:set-variable variableName="input1"><![CDATA[{
+	"employee": [{
+		"id": "A007",
+		"first_name": "Jan",
+		"last_name": "Doe"
+	},{
+		"id": "A008",
+		"first_name": "Ron",
+		"last_name": "David"
+	},{
+		"id": "A009",
+		"first_name": "Jane",
+		"last_name": "Kane"
+	},{
+		"id": "A010",
+		"first_name": "Marsh",
+		"last_name": "Megan"
+	},{
+		"id": "A011",
+		"first_name": "Kelly",
+		"last_name": "Mitch"
+	},{
+		"id": "A012",
+		"first_name": "Chris",
+		"last_name": "Vaste"
+	}]
+}]]></ee:set-variable>
+                <ee:set-variable variableName="input2"><![CDATA[{
+  "scoreBoard": [
+    {
+      "id": "A007",
+      "subjects": [
+        "Maths",
+        "English",
+        "Arts",
+        "Drawimgs"
+      ],
+      "score": [
+        80,
+        75,
+        89,
+        100
+      ]
+    },
+    {
+      "id": "A008",
+      "subjects": [
+        "Maths",
+        "English",
+        "Arts",
+        "Drawimgs"
+      ],
+      "score": [
+        70,
+        85,
+        69,
+        90
+      ]
+    },
+    {
+      "id": "A021",
+      "subjects": [
+        "Maths",
+        "English",
+        "Arts",
+        "Drawimgs"
+      ],
+      "score": [
+        90,
+        87,
+        77,
+        95
+      ]
+    }
+  ]
+}]]></ee:set-variable>
+                <ee:set-variable variableName="includeAll"><![CDATA[attributes.queryParams.includeAll]]></ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <choice doc:name="Choice" doc:id="3a26e2ac-eb09-497a-9255-99041e9212c5" >
+			<when expression="#[vars.includeAll == 'true']">
+				<ee:transform doc:name="Set Output Response" doc:id="4e2ba5f2-88a7-4760-82fb-0643ca75166c" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"certificate": vars.input1.employee map (employee,indexOfEmployee) ->
+	{
+		"id" : employee.id,
+		"firstName" : employee.first_name,
+		"lastName" : employee.last_name,
+		("MarksBySubjectWise" : using 
+			(
+				subjects = vars.input2.scoreBoard[?($.id == employee.id)].subjects[0],
+				scores = vars.input2.scoreBoard[?($.id == employee.id)].score[0]
+			)
+			{
+				(subjects map '$':scores[$$])
+			}) if vars.input2.scoreBoard[?($.id == employee.id)] != null
+	}
+}
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			</when>
+			<otherwise>
+				<ee:transform doc:name="Set Output Response" doc:id="415e18ee-b98d-4e8d-99df-452724ee6a91" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json skipNullOn = "everywhere"
+---
+{
+	("certificate": vars.input1.employee filter (vars.input2.scoreBoard.id contains $.id) map (employee,indexOfEmployee) ->
+	{
+		"id" : employee.id,
+		"firstName" : employee.first_name,
+		"lastName" : employee.last_name,
+		"MarksBySubjectWise" : using 
+			(
+				subjects = vars.input2.scoreBoard[?($.id == employee.id)].subjects[0],
+				scores = vars.input2.scoreBoard[?($.id == employee.id)].score[0]
+			)
+			{
+				(subjects map '$':scores[$$])
+			}
+	})
+}
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			</otherwise>
+		</choice>
+        
+	</flow>
+</mule>
